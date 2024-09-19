@@ -1,0 +1,27 @@
+image: docker:latest
+
+services:
+  - docker:dind
+
+variables:
+  # Variables predeterminadas para el registro del GitLab Container Registry
+  IMAGE_NAME: "registry.gitlab.com/mind21/ghcr_test"
+  DOCKER_DRIVER: overlay2
+
+before_script:
+  # Iniciar sesión en el registro de GitLab con un token de acceso o credenciales
+  - echo "$CI_REGISTRY_PASSWORD" | docker login -u "$CI_REGISTRY_USER" --password-stdin $CI_REGISTRY
+
+stages:
+  - build
+
+build_image:
+  stage: build
+  script:
+    # Construir la imagen de Docker con una etiqueta que incluya el commit actual
+    #- docker build -t $IMAGE_NAME:$CI_COMMIT_SHORT_SHA .
+    - docker build -t $CI_REGISTRY_NAME .
+    # Hacer push de la imagen recién construida al GitLab Container Registry
+    - docker push $CI_REGISTRY_NAME
+  only:
+    - main  # O el nombre de la rama en la que quieres que se ejecute (puede ser master o cualquier otra rama principal)
